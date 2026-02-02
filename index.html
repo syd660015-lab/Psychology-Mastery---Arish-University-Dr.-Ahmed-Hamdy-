@@ -4,59 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة علم النفس - جامعة العريش</title>
+    <title>علم النفس الدينامي ونظريات القياس - جامعة العريش</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Cairo', sans-serif;
             background-color: #f8fafc;
-            scroll-behavior: smooth;
-        }
-        
-        /* تأثير الظهور العام */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* تأثير التتابع الخاص بالأسئلة */
-        @keyframes mcqReveal {
-            0% { 
-                opacity: 0; 
-                transform: translateY(30px) scale(0.95); 
-            }
-            100% { 
-                opacity: 1; 
-                transform: translateY(0) scale(1); 
-            }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-
-        .mcq-card-reveal {
-            opacity: 0;
-            animation: mcqReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-            will-change: transform, opacity;
-        }
-        
-        /* تأثير التفاعل مع البطاقة */
-        .mcq-card-hover {
-            transition: all 0.3s ease;
-        }
-        .mcq-card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         }
     </style>
 <script type="importmap">
 {
   "imports": {
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
   }
 }
 </script>
