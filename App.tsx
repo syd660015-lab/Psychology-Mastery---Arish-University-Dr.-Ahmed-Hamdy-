@@ -7,6 +7,18 @@ import { GlossaryTable } from './components/GlossaryTable';
 import { QuestionCard } from './components/QuestionCard';
 import { generateUnitContent, generateGlossaryTerms } from './services/geminiService';
 
+declare global {
+  // Define AIStudio interface to ensure identical modifiers and matching types across global scope
+  interface AIStudio {
+    hasSelectedApiKey: () => Promise<boolean>;
+    openSelectKey: () => Promise<void>;
+  }
+
+  interface Window {
+    aistudio: AIStudio;
+  }
+}
+
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.HOME);
   const [activeUnit, setActiveUnit] = useState<UnitData | null>(null);
@@ -16,6 +28,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [visibleAnalyses, setVisibleAnalyses] = useState<Record<string, boolean>>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hasAiKey, setHasAiKey] = useState<boolean>(false);
 
   // Quiz States
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
@@ -30,8 +43,29 @@ const App: React.FC = () => {
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
+    checkApiKeyStatus();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
+
+  const checkApiKeyStatus = async () => {
+    try {
+      const hasKey = await window.aistudio.hasSelectedApiKey();
+      setHasAiKey(hasKey);
+    } catch (e) {
+      console.error("Error checking API key status", e);
+    }
+  };
+
+  const handleOpenKeyDialog = async () => {
+    try {
+      await window.aistudio.openSelectKey();
+      // Assume success as per guidelines
+      setHasAiKey(true);
+      setErrorMessage(null);
+    } catch (e) {
+      console.error("Error opening key dialog", e);
+    }
+  };
 
   const startTimer = (minutes: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -86,6 +120,7 @@ const App: React.FC = () => {
       startTimer(20); 
     } catch (error: any) {
       setErrorMessage(error.message || "فشل في بدء التقييم.");
+      if (error.message?.includes("API")) setHasAiKey(false);
     } finally {
       setIsLoading(false);
     }
@@ -106,6 +141,7 @@ const App: React.FC = () => {
       startTimer(45); 
     } catch (error: any) {
       setErrorMessage(error.message || "فشل في بدء الامتحان الشامل.");
+      if (error.message?.includes("API")) setHasAiKey(false);
     } finally {
       setIsLoading(false);
     }
@@ -123,6 +159,7 @@ const App: React.FC = () => {
       }));
     } catch (error: any) {
       setErrorMessage(error.message || "فشل في توليد الأسئلة.");
+      if (error.message?.includes("API")) setHasAiKey(false);
     } finally {
       setIsLoading(false);
     }
@@ -140,6 +177,7 @@ const App: React.FC = () => {
       }));
     } catch (error: any) {
       setErrorMessage(error.message || "فشل في توليد المصطلحات.");
+      if (error.message?.includes("API")) setHasAiKey(false);
     } finally {
       setIsLoading(false);
     }
@@ -250,19 +288,36 @@ const App: React.FC = () => {
           <h1 className="text-4xl md:text-5xl font-black text-indigo-950 mb-6">{COURSE_GENERAL.name}</h1>
           <p className="text-2xl text-indigo-600 font-black mb-8">{COURSE_GENERAL.university} - {COURSE_GENERAL.faculty}</p>
           
-          <div className="grid grid-cols-1 gap-8 mb-10">
-            <div className="bg-amber-500 p-10 rounded-[2.5rem] shadow-2xl text-white flex flex-col md:flex-row items-center justify-between group hover:scale-[1.01] transition-transform">
-              <div className="text-right mb-6 md:mb-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+            <div className="bg-amber-500 p-8 rounded-[2.5rem] shadow-2xl text-white flex flex-col justify-between group hover:scale-[1.01] transition-transform">
+              <div className="text-right mb-6">
                 <h3 className="text-3xl font-black mb-4">🎓 الاختبار النهائي الشامل</h3>
-                <p className="font-bold text-amber-50 leading-relaxed text-xl max-w-xl">تحدي الـ 30 سؤالاً: يغطي كافة الوحدات الدراسية ويحاكي الامتحان النهائي الرسمي لجامعة العريش.</p>
+                <p className="font-bold text-amber-50 leading-relaxed text-lg">تحدي الـ 30 سؤالاً: يغطي كافة الوحدات الدراسية ويحاكي الامتحان النهائي الرسمي.</p>
               </div>
               <button 
                 onClick={startComprehensiveExam} 
                 disabled={isLoading}
-                className="bg-white text-amber-600 px-12 py-6 rounded-2xl font-black shadow-xl text-2xl flex items-center justify-center gap-4 hover:bg-amber-50 transition-colors"
+                className="bg-white text-amber-600 px-8 py-5 rounded-2xl font-black shadow-xl text-xl flex items-center justify-center gap-4 hover:bg-amber-50 transition-colors"
               >
-                {isLoading ? 'جاري التحضير...' : 'دخول الامتحان النهائي الآن ←'}
+                {isLoading ? 'جاري التحضير...' : 'دخول الامتحان الآن ←'}
               </button>
+            </div>
+
+            <div className="bg-indigo-950 p-8 rounded-[2.5rem] shadow-2xl text-white flex flex-col justify-between border border-indigo-800">
+               <div className="text-right mb-6">
+                  <h3 className="text-3xl font-black mb-4 flex items-center gap-3">
+                    <span className="text-amber-400">🧠</span> محرك Gemini AI
+                  </h3>
+                  <p className="font-bold text-indigo-200 leading-relaxed text-lg">
+                    {hasAiKey ? 'نظام الذكاء الاصطناعي متصل وجاهز لتوليد المحتوى التفاعلي.' : 'يرجى تفعيل مفتاح الوصول لاستخدام ميزات الذكاء الاصطناعي.'}
+                  </p>
+               </div>
+               <button 
+                  onClick={handleOpenKeyDialog}
+                  className={`w-full ${hasAiKey ? 'bg-indigo-800 text-indigo-100' : 'bg-rose-600 text-white'} py-5 rounded-2xl font-black shadow-xl text-xl flex items-center justify-center gap-4 transition-all`}
+               >
+                  {hasAiKey ? '✅ المفتاح نشط (تغيير)' : '🔑 تفعيل مفتاح API الآن'}
+               </button>
             </div>
           </div>
 
@@ -331,6 +386,7 @@ const App: React.FC = () => {
            {errorMessage && (
              <div className="mb-8 p-6 bg-rose-50 border-r-8 border-rose-600 rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
                <p className="text-rose-950 font-black text-lg">{errorMessage}</p>
+               <button onClick={handleOpenKeyDialog} className="bg-rose-600 text-white px-6 py-2 rounded-xl font-black">تفعيل المفتاح 🔑</button>
              </div>
            )}
 
