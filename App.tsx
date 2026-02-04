@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Layout } from './components/Layout';
+import { Layout } from './components/layout';
 import { COURSE_GENERAL, UNIT_1_DATA, UNIT_2_DATA, UNIT_3_DATA, UNIT_4_DATA, UNIT_5_DATA, UNITS } from './constants';
 import { AppState, SubTab, UnitData, Question, GlossaryTerm } from './types';
 import { GlossaryTable } from './components/GlossaryTable';
